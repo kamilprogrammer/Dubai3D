@@ -40,3 +40,34 @@
 .read-the-docs {
   color: #888;
 }
+
+@keyframes slideInLeft {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+@keyframes slideInRight {
+  0% {
+    transform: translateX(100%);
+  }
+  50% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-slideInLeft {
+  animation: slideInLeft 2s forwards;
+}
+
+.animate-slideInRight {
+  animation: slideInRight 2s forwards;
+}

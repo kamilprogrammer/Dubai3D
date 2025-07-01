@@ -3,12 +3,11 @@ import { useFrame } from "@react-three/fiber";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
-export default function DroneFollower({ gltf }: { gltf: any }) {
-  const droneRef = useRef<THREE.Object3D | null>(null);
+export default function DroneFollower({ gltf, ref }: { gltf: any; ref: React.RefObject<THREE.Object3D | null> }) {
   const { camera } = useThree();
 
   useFrame(() => {
-    if (droneRef.current) {
+    if (ref.current) {
       // Get the camera's world position
       const cameraPos = new THREE.Vector3();
       camera.getWorldPosition(cameraPos);
@@ -28,7 +27,7 @@ export default function DroneFollower({ gltf }: { gltf: any }) {
       dronePos.y -= 0.25;
 
       // Set the drone's position
-      droneRef.current.position.copy(dronePos);
+      ref.current.position.copy(dronePos);
 
       // Create a quaternion from the camera's rotation
       const cameraQuat = new THREE.Quaternion();
@@ -44,7 +43,7 @@ export default function DroneFollower({ gltf }: { gltf: any }) {
       finalQuat.multiplyQuaternions(cameraQuat, y180);
 
       // Set the drone's rotation from the final quaternion
-      droneRef.current.quaternion.copy(finalQuat);
+      ref.current.quaternion.copy(finalQuat);
     }
   });
 
@@ -58,5 +57,5 @@ export default function DroneFollower({ gltf }: { gltf: any }) {
     }
   });
 
-  return <primitive ref={droneRef} object={gltf.scene} />;
+  return <primitive ref={ref} object={gltf.scene} />;
 }
