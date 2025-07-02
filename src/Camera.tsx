@@ -16,7 +16,7 @@ export default function Camera({ interior }: { interior: boolean }) {
     sound.current = new Audio(listener);
     sound.current.setBuffer(buffer);
     sound.current.setLoop(true);
-    sound.current.setVolume(0.3);
+    sound.current.setVolume(0.8);
     sound.current.playbackRate = 1.6;
   }, [buffer]);
 
