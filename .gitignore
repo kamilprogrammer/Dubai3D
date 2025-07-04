@@ -24,3 +24,11 @@ dist-ssr
 *.sw?
 "public/*.glb" 
 "public/*.glb" 
+
+
+.env
+
+public/cctv.glb
+public/drone.glb
+public/dubai.glb
+public/interior.glb

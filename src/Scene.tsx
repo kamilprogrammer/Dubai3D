@@ -31,6 +31,7 @@ export default function Scene({
   const lookingRef = useRef(false);
   const [isLookingAtButton, setIsLookingAtButton] = useState(false);
   const { camera } = useThree();
+  //camera.position.set(1010, 10, 20);
 
   function triggerEnterBuilding() {
     const targetPosition = new THREE.Vector3(1010, 10, 20);
