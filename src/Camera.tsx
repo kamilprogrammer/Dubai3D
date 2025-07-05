@@ -8,7 +8,7 @@ export default function Camera({ interior }: { interior: boolean }) {
 
   const direction = new THREE.Vector3();
   const keys = useRef<{ [key: string]: boolean }>({});
-  let speed: number = interior ? 0.9 : 1.2;
+  let speed: number = interior ? 1 : 1.5;
 
   useEffect(() => {
     const down = (e: KeyboardEvent) =>
@@ -65,21 +65,18 @@ export default function Camera({ interior }: { interior: boolean }) {
     }
 
     direction.normalize();
-    const moveDir = new THREE.Vector3(direction.x, 0, direction.z)
+    const moveDir = new THREE.Vector3(direction.x, direction.y, direction.z)
       .applyQuaternion(camera.quaternion)
       .normalize()
       .multiplyScalar(speed);
 
     // Add vertical (y) manually
-    moveDir.y = direction.y * speed;
+    if (interior) {
+      moveDir.y = direction.y * speed;
+    }
 
     camera.position.add(moveDir);
   });
-
-  /* if (interior) {
-    camera.position.z = 10;
-    camera.position.y = 10;
-  }*/
 
   return <PointerLockControls /*makeDefault*/ />;
 }

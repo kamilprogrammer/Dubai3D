@@ -20,7 +20,7 @@ export default function Scene({
 }: {
   dubai: any;
   drone: any;
-  setShowInterior: (b: boolean) => void;
+  setShowInterior: React.Dispatch<React.SetStateAction<boolean>>;
   showInterior: boolean;
   isTransitioning: boolean;
   setIsTransitioning: (b: boolean) => void;
@@ -31,7 +31,6 @@ export default function Scene({
   const lookingRef = useRef(false);
   const [isLookingAtButton, setIsLookingAtButton] = useState(false);
   const { camera } = useThree();
-  //camera.position.set(1010, 10, 20);
 
   function triggerEnterBuilding() {
     const targetPosition = new THREE.Vector3(1010, 10, 20);
@@ -179,7 +178,7 @@ export default function Scene({
       {/* Interior Model */}
       {showInterior && (
         <Suspense fallback={null}>
-          <InteriorModel />
+          <InteriorModel setShowInterior={setShowInterior} />
         </Suspense>
       )}
     </>

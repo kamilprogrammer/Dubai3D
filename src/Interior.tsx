@@ -5,10 +5,14 @@ import { useEffect, useState } from "react";
 import Cctv from "./Cctv";
 import { supabase } from "./supabase";
 
-export default function InteriorModel() {
+export default function InteriorModel({
+  setShowInterior,
+}: {
+  setShowInterior: React.Dispatch<React.SetStateAction<boolean>>;
+}) {
   const interior = useGLTF("/interior.glb");
-
   const { camera } = useThree();
+
   const [devices, setDevices] = useState<CameraType[]>([]);
 
   useEffect(() => {
@@ -18,13 +22,23 @@ export default function InteriorModel() {
         .select("*")
         .order("id", { ascending: true });
       if (data) {
-        console.log(data);
+        //console.log(data);
         if (!devices.length) {
           setDevices(
             data.map((dvc) => {
               return {
                 id: dvc.id,
                 uniqueId: dvc.uniqueId,
+                ip: dvc.ip,
+                mac: dvc.mac,
+                model: dvc.model,
+                vendor: dvc.vendor,
+                port: dvc.port,
+                username: dvc.username,
+                password: dvc.password,
+                notes: dvc.notes,
+                mode: dvc.mode,
+
                 title: dvc.title,
                 position: { x: dvc.x, y: dvc.y, z: dvc.z },
                 rotation: { x: dvc.rot_x, y: dvc.rot_y, z: dvc.rot_z },
@@ -50,9 +64,11 @@ export default function InteriorModel() {
   });
 
   const onUpdatePosition = (uniqueId: string, pos: any, rot: any) => {
-    console.log("function!");
+    {
+      /*console.log("function!");
     console.log("Updated Rotation:", rot);
-    console.log("Updated Position:", pos);
+    console.log("Updated Position:", pos);*/
+    }
 
     setDevices((prev) => {
       const updated = prev.map((dvc) =>
@@ -60,7 +76,7 @@ export default function InteriorModel() {
           ? { ...dvc, position: { ...pos }, rotation: { ...rot } }
           : dvc
       );
-      console.log("Updated Devices:", updated); // ✅ See the actual result
+      console.log("Updated Devices:", updated);
       return updated;
     });
   };
@@ -71,6 +87,14 @@ export default function InteriorModel() {
         const newCam: CameraType = {
           uniqueId: crypto.randomUUID(),
           title: "Placed Camera",
+          ip: "",
+          mac: "",
+          model: "IPC-HDBW2230E-S-S2",
+          vendor: "Dahua",
+          port: 554,
+          username: "admin",
+          password: "admin#1@go.dubai",
+          notes: "",
           position: {
             x: camera.position.x,
             y: camera.position.y,
@@ -85,25 +109,22 @@ export default function InteriorModel() {
         };
         setDevices((prev) => [...prev, newCam]);
       }
-      if (e.key === "Delete" || e.key === "Backspace") {
-        const { data, error } = await supabase
-          .from("DubaiDevices")
-          .update({
-            show: false,
-          })
-          .eq("id", devices[devices.length - 1].id);
-        console.log(data, error || "Deleted successfully");
+      if (e.key === "Delete") {
+        if (devices[devices.length - 1].id) {
+          const { data, error } = await supabase
+            .from("DubaiDevices")
+            .update({
+              show: false,
+            })
+            .eq("id", devices[devices.length - 1].id);
+          console.log(data, error || "Deleted successfully");
+        }
         setDevices((prev) => prev.slice(0, prev.length - 1));
       }
-
       if (e.key === "Home" || e.key === "h") {
-        console.log("Saving!");
-        console.log(devices);
+        console.log(devices[devices.length - 1]);
         devices.forEach(async (dvc) => {
-          console.log(dvc.id);
           if (dvc.id) {
-            console.log("Updating!");
-            console.log(dvc);
             const { data, error } = await supabase
               .from("DubaiDevices")
               .update({
@@ -115,9 +136,9 @@ export default function InteriorModel() {
                 rot_z: dvc.rotation.z,
               })
               .eq("id", dvc.id);
-            console.log(data, error || "Updated successfully");
+            console.log(data);
+            console.log(error || "Updated successfully");
           } else {
-            console.log("Inserting!");
             const { data, error } = await supabase
               .from("DubaiDevices")
               .insert({
@@ -125,15 +146,20 @@ export default function InteriorModel() {
                 ip: dvc.ip,
                 mac: dvc.mac,
                 notes: dvc.notes,
-                port: dvc.port,
+                port: 554,
                 title: dvc.title,
+                username: "admin",
+                password: "admin#1@go.dubai",
+                vendor: "Dahua",
+                model: "IPC-HDBW2230E-S-S2",
                 x: dvc.position.x,
                 y: dvc.position.y,
                 z: dvc.position.z,
                 rot_x: dvc.rotation.x,
                 rot_y: dvc.rotation.y,
                 rot_z: dvc.rotation.z,
-                show: dvc.show,
+                mode: "ACTIVE",
+                show: true,
               })
               .select("*");
             console.log(data);
@@ -150,6 +176,11 @@ export default function InteriorModel() {
           }
         });
       }
+      if (e.key === "o") {
+        camera.position.set(0, 10, 10);
+        camera.rotation.set(0, 0, 0);
+        setShowInterior(false);
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -158,7 +189,7 @@ export default function InteriorModel() {
   return (
     <>
       <ambientLight intensity={2} />
-      <pointLight position={[10, 10, 10]} />
+      <pointLight position={[10, 10, 10]} intensity={10} />
       <Sky
         distance={450000}
         sunPosition={[100, 40, 100]}

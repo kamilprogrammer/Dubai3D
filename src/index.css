@@ -184,3 +184,14 @@ button:focus-visible {
     @apply bg-background text-foreground;
   }
 }
+
+@font-face {
+  font-family: "Cairo";
+  src: url("/cairo.ttf");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@theme {
+  --font-cairo: "Cairo", sans-serif;
+}

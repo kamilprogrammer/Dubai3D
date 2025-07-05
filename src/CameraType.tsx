@@ -6,7 +6,7 @@ export type CameraType = {
   mac?: string;
   model?: string;
   vendor?: string;
-  port?: string;
+  port?: number;
   username?: string;
   password?: string;
   notes?: string;
@@ -20,5 +20,6 @@ export type CameraType = {
     y: number;
     z: number;
   };
+  mode?: string;
   show: boolean;
 };

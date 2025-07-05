@@ -1,8 +1,9 @@
-import { PivotControls } from "@react-three/drei";
-import { useMemo, useRef } from "react";
+import { Html, PivotControls } from "@react-three/drei";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import type { CameraType } from "./CameraType";
+import { motion } from "framer-motion";
 
 type Props = {
   cam: CameraType;
@@ -16,6 +17,19 @@ type Props = {
 export default function Cctv({ cam, onUpdatePosition }: Props) {
   const objRef = useRef<THREE.Group>(null);
   const { scene } = useGLTF("/cctv.glb");
+  const [hovered, setHovered] = useState(false);
+  const [isDeveloping, setIsDeveloping] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "p") {
+        setIsDeveloping(!isDeveloping);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isDeveloping]);
+
   const previousPosition = useRef<THREE.Vector3>(new THREE.Vector3());
   const StaticPosition = useMemo(
     () => new THREE.Vector3(cam.position.x, cam.position.y, cam.position.z),
@@ -30,6 +44,7 @@ export default function Cctv({ cam, onUpdatePosition }: Props) {
 
   return (
     <PivotControls
+      enabled={isDeveloping}
       anchor={[0, 0, 0]}
       scale={3}
       disableScaling
@@ -66,10 +81,96 @@ export default function Cctv({ cam, onUpdatePosition }: Props) {
       {/* this is the object PivotControls actually moves, so put the ref HERE */}
       <group
         ref={objRef}
+        onPointerOver={() => setHovered(!isDeveloping)}
+        onPointerOut={() => setHovered(false)}
         position={[StaticPosition.x, StaticPosition.y, StaticPosition.z]}
         rotation={[StaticRotation.x, StaticRotation.y, StaticRotation.z]}
       >
         <primitive object={scene.clone()} scale={[0.7, 0.7, 0.7]} />
+        {hovered && (
+          <Html distanceFactor={60} position={[2, 0, 0]} center>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.5 }}
+              className="flex items-center justify-center backdrop-blur-sm shadow-xl rounded-xl p-4 text-xs text-gray-800 w-64 border border-gray-200"
+            >
+              <div className="bg-white/50 backdrop-blur-sm shadow-xl rounded-xl p-4 text-xs text-gray-800 w-64 border border-gray-200">
+                <h3 className="font-cairo text-sm font-bold font-weight-bold mb-2 text-black">
+                  {cam.title || "Camera #1"}
+                </h3>
+                <ul className="space-y-1">
+                  {cam.ip && (
+                    <li className="space-y-2 backdrop-blur-sm shadow-xl rounded-md p-2 text-xs text-gray-800 border border-gray-200">
+                      <span className="font-cairo font-semibold">{cam.ip}</span>
+                    </li>
+                  )}
+                  {cam.mac && (
+                    <li className="space-y-2 backdrop-blur-sm shadow-xl rounded-md p-2 text-xs text-gray-800 border border-gray-200">
+                      <span className="font-cairo font-semibold">
+                        {cam.mac}
+                      </span>
+                    </li>
+                  )}
+                  {cam.vendor && (
+                    <li className="space-y-2 backdrop-blur-sm shadow-xl rounded-md p-2 text-xs text-gray-800 border border-gray-200">
+                      <span className="font-cairo font-semibold">
+                        {cam.vendor}
+                      </span>
+                    </li>
+                  )}
+                  {cam.model && (
+                    <li className="space-y-2 backdrop-blur-sm shadow-xl rounded-md p-2 text-xs text-gray-800 border border-gray-200">
+                      <span className="font-cairo font-semibold">
+                        {cam.model}
+                      </span>
+                    </li>
+                  )}
+                  {cam.port && (
+                    <li className="space-y-2 backdrop-blur-sm shadow-xl rounded-md p-2 text-xs text-gray-800 border border-gray-200">
+                      <span className="font-cairo font-semibold">
+                        Stream Port: {cam.port}
+                      </span>
+                    </li>
+                  )}
+                  {cam.notes && (
+                    <li className="space-y-2 backdrop-blur-sm shadow-xl rounded-md p-2 text-xs text-gray-800 border border-gray-200">
+                      <span className="font-cairo font-semibold">
+                        {cam.notes}
+                      </span>
+                    </li>
+                  )}
+                  {cam.mode && (
+                    <li className="flex items-center justify-center space-y-2 backdrop-blur-sm shadow-xl rounded-md p-2 text-xs text-gray-800 border border-gray-200">
+                      <span className="font-cairo font-semibold">
+                        {cam.mode === "ACTIVE" ? (
+                          <div
+                            className="h-2 w-2 rounded-full justify-center items-center mt-2 mr-1"
+                            style={{
+                              backgroundColor: "green",
+                            }}
+                          ></div>
+                        ) : (
+                          <div
+                            className="h-2 w-2 rounded-full justify-center items-center mt-2 mr-1"
+                            style={{
+                              backgroundColor: "red",
+                            }}
+                          ></div>
+                        )}
+                      </span>
+
+                      <span className="font-cairo font-semibold">
+                        {cam.mode === "ACTIVE" ? "Active" : "Inactive"}
+                      </span>
+                    </li>
+                  )}
+                </ul>
+              </div>
+            </motion.div>
+          </Html>
+        )}
       </group>
     </PivotControls>
   );
