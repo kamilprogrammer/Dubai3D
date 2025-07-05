@@ -20,7 +20,7 @@ export default function Scene({
 }: {
   dubai: any;
   drone: any;
-  setShowInterior: (b: boolean) => void;
+  setShowInterior: React.Dispatch<React.SetStateAction<boolean>>;
   showInterior: boolean;
   isTransitioning: boolean;
   setIsTransitioning: (b: boolean) => void;
@@ -178,7 +178,7 @@ export default function Scene({
       {/* Interior Model */}
       {showInterior && (
         <Suspense fallback={null}>
-          <InteriorModel />
+          <InteriorModel setShowInterior={setShowInterior} />
         </Suspense>
       )}
     </>
