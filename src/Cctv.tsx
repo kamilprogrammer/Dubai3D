@@ -1,12 +1,14 @@
 import { Html, PivotControls } from "@react-three/drei";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import type { CameraType } from "./CameraType";
 import { motion } from "framer-motion";
+import InfoImage from "./InfoBadge";
 
 type Props = {
   cam: CameraType;
+  isDeveloping: boolean;
   onUpdatePosition: (
     uniqueId: string,
     pos: { x: number; y: number; z: number },
@@ -14,21 +16,10 @@ type Props = {
   ) => void;
 };
 
-export default function Cctv({ cam, onUpdatePosition }: Props) {
+export default function Cctv({ cam, isDeveloping, onUpdatePosition }: Props) {
   const objRef = useRef<THREE.Group>(null);
   const { scene } = useGLTF("/cctv.glb");
   const [hovered, setHovered] = useState(false);
-  const [isDeveloping, setIsDeveloping] = useState(false);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "p") {
-        setIsDeveloping(!isDeveloping);
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isDeveloping]);
 
   const previousPosition = useRef<THREE.Vector3>(new THREE.Vector3());
   const StaticPosition = useMemo(
@@ -81,11 +72,12 @@ export default function Cctv({ cam, onUpdatePosition }: Props) {
       {/* this is the object PivotControls actually moves, so put the ref HERE */}
       <group
         ref={objRef}
-        onPointerOver={() => setHovered(!isDeveloping)}
+        onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
         position={[StaticPosition.x, StaticPosition.y, StaticPosition.z]}
         rotation={[StaticRotation.x, StaticRotation.y, StaticRotation.z]}
       >
+        <InfoImage position={[1.1, 0.5, 0]} scale={[0.75, 0.75]} />
         <primitive object={scene.clone()} scale={[0.7, 0.7, 0.7]} />
         {hovered && (
           <Html distanceFactor={60} position={[2, 0, 0]} center>
