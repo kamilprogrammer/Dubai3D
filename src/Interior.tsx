@@ -4,6 +4,7 @@ import type { CameraType } from "./CameraType";
 import { useEffect, useState } from "react";
 import Cctv from "./Cctv";
 import { supabase } from "./supabase";
+import { useControls } from "leva";
 
 export default function InteriorModel({
   setShowInterior,
@@ -12,7 +13,12 @@ export default function InteriorModel({
 }) {
   const interior = useGLTF("/interior.glb");
   const { camera } = useThree();
-
+  const [isDeveloping, setIsDeveloping] = useState(false);
+  /*const { positionX, visible, color } = useControls("Box", {
+    positionX: { value: 0, min: -5, max: 5, step: 0.1 },
+    visible: true,
+    color: "#ff0000",
+  });*/
   const [devices, setDevices] = useState<CameraType[]>([]);
 
   useEffect(() => {
@@ -181,11 +187,14 @@ export default function InteriorModel({
         camera.rotation.set(0, 0, 0);
         setShowInterior(false);
       }
+      if (e.key === "p") {
+        setIsDeveloping(!isDeveloping);
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [devices]);
+  }, [devices, isDeveloping]);
   return (
     <>
       <ambientLight intensity={2} />
@@ -205,6 +214,7 @@ export default function InteriorModel({
           return (
             <Cctv
               cam={dvc}
+              isDeveloping={isDeveloping}
               key={dvc.uniqueId}
               onUpdatePosition={onUpdatePosition}
             />
