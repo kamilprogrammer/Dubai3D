@@ -1,6 +1,7 @@
 import { Suspense, useRef, useState } from "react";
 import * as THREE from "three";
 import { useFrame, useThree } from "@react-three/fiber";
+
 import { useEffect } from "react";
 import { Button } from "./components/ui/button";
 import { Html, Text } from "@react-three/drei";
@@ -9,27 +10,37 @@ import { Float } from "@react-three/drei";
 import Camera from "./Camera";
 import DroneFollower from "./Drone";
 import InteriorModel from "./Interior";
+import { useControls } from "leva";
 
 export default function Scene({
   dubai,
   drone,
-  setShowInterior,
+  showStream,
+  setShowStream,
+  setStreamValue,
   showInterior,
+  setShowInterior,
   isTransitioning,
   setIsTransitioning,
 }: {
   dubai: any;
   drone: any;
-  setShowInterior: React.Dispatch<React.SetStateAction<boolean>>;
+  showStream: boolean;
+  setShowStream: React.Dispatch<React.SetStateAction<boolean>>;
+  setStreamValue: React.Dispatch<React.SetStateAction<string>>;
   showInterior: boolean;
+  setShowInterior: React.Dispatch<React.SetStateAction<boolean>>;
   isTransitioning: boolean;
   setIsTransitioning: (b: boolean) => void;
 }) {
   const DubaiRef = useRef<THREE.Object3D | null>(null);
-  const DroneRef = useRef<THREE.Object3D | null>(null);
+  //const DroneRef = useRef<THREE.Object3D | null>(null);
   const buttonRef = useRef<THREE.Mesh | null>(null);
   const lookingRef = useRef(false);
+  const cameraRef = useRef<any>(null);
   const [isLookingAtButton, setIsLookingAtButton] = useState(false);
+  const [heatMap, setHeatMap] = useState(false);
+
   const { camera } = useThree();
 
   function triggerEnterBuilding() {
@@ -82,6 +93,15 @@ export default function Scene({
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
+
+  if (showInterior) {
+    const controls = useControls("HeatMap - TopView", {
+      HeatMap: {
+        value: heatMap,
+        onChange: (value) => setHeatMap(value),
+      },
+    });
+  }
 
   return (
     <>
@@ -158,9 +178,9 @@ export default function Scene({
         </>
       )}
       {/* Drone */}
-      <Camera interior={showInterior} />
+      <Camera interior={showInterior} cameraRef={cameraRef} heatMap={heatMap} />
 
-      {!showInterior && (
+      {/*{!showInterior && (
         <Float
           speed={1}
           floatIntensity={0.1}
@@ -178,7 +198,13 @@ export default function Scene({
       {/* Interior Model */}
       {showInterior && (
         <Suspense fallback={null}>
-          <InteriorModel setShowInterior={setShowInterior} />
+          <InteriorModel
+            showStream={showStream}
+            heatMap={heatMap}
+            setShowStream={setShowStream}
+            setStreamValue={setStreamValue}
+            setShowInterior={setShowInterior}
+          />
         </Suspense>
       )}
     </>

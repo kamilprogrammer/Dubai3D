@@ -1,25 +1,63 @@
 import { Sky, useGLTF } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import type { CameraType } from "./CameraType";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Cctv from "./Cctv";
 import { supabase } from "./supabase";
-import { useControls } from "leva";
+import * as THREE from "three";
 
 export default function InteriorModel({
+  showStream,
+  heatMap,
+  setShowStream,
+  setStreamValue,
   setShowInterior,
 }: {
+  showStream: boolean;
+  heatMap: boolean;
+  setShowStream: React.Dispatch<React.SetStateAction<boolean>>;
+  setStreamValue: React.Dispatch<React.SetStateAction<string>>;
   setShowInterior: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const interior = useGLTF("/interior.glb");
   const { camera } = useThree();
   const [isDeveloping, setIsDeveloping] = useState(false);
-  /*const { positionX, visible, color } = useControls("Box", {
-    positionX: { value: 0, min: -5, max: 5, step: 0.1 },
-    visible: true,
-    color: "#ff0000",
-  });*/
   const [devices, setDevices] = useState<CameraType[]>([]);
+  const InteriorRef = useRef<THREE.Object3D | null>(null);
+
+  useEffect(() => {
+    if (heatMap && InteriorRef.current) {
+      const targetPosition = new THREE.Vector3(780, 240, 100);
+      let t = 0.02;
+      const from = camera.position.clone();
+      const to = targetPosition.clone();
+
+      //const tmp = new THREE.Object3D();
+
+      const animate = () => {
+        t += 0.01;
+
+        // Interpolate position
+
+        // Make tmp look at the target (e.g., your model)
+        /*tmp.position.copy(camera.position);
+        if (InteriorRef.current) {
+          tmp.lookAt(InteriorRef.current.position);
+        }
+*/
+        //console.log(tmp.quaternion);
+        // Interpolate orientation
+        //camera.quaternion.slerp(tmp.quaternion, 0.1); // smoother interpolation
+        camera.position.lerpVectors(from, to, t);
+
+        camera.lookAt(InteriorRef.current!.position);
+
+        if (t < 1) requestAnimationFrame(animate);
+      };
+
+      animate();
+    }
+  }, [heatMap]);
 
   useEffect(() => {
     const fetchDevices = async () => {
@@ -90,30 +128,32 @@ export default function InteriorModel({
   useEffect(() => {
     const handleKeyDown = async (e: KeyboardEvent) => {
       if (e.key.toLowerCase() === "c") {
-        const newCam: CameraType = {
-          uniqueId: crypto.randomUUID(),
-          title: "Placed Camera",
-          ip: "",
-          mac: "",
-          model: "IPC-HDBW2230E-S-S2",
-          vendor: "Dahua",
-          port: 554,
-          username: "admin",
-          password: "admin#1@go.dubai",
-          notes: "",
-          position: {
-            x: camera.position.x,
-            y: camera.position.y,
-            z: camera.position.z,
-          },
-          rotation: {
-            x: camera.rotation.x,
-            y: camera.rotation.y,
-            z: camera.rotation.z,
-          },
-          show: true,
-        };
-        setDevices((prev) => [...prev, newCam]);
+        if (isDeveloping) {
+          const newCam: CameraType = {
+            uniqueId: crypto.randomUUID(),
+            title: "Placed Camera",
+            ip: "",
+            mac: "",
+            model: "IPC-HDBW2230E-S-S2",
+            vendor: "Dahua",
+            port: 554,
+            username: "admin",
+            password: "admin#1@go.dubai",
+            notes: "",
+            position: {
+              x: camera.position.x,
+              y: camera.position.y,
+              z: camera.position.z,
+            },
+            rotation: {
+              x: camera.rotation.x,
+              y: camera.rotation.y,
+              z: camera.rotation.z,
+            },
+            show: true,
+          };
+          setDevices((prev) => [...prev, newCam]);
+        }
       }
       if (e.key === "Delete") {
         if (devices[devices.length - 1].id) {
@@ -209,19 +249,26 @@ export default function InteriorModel({
         inclination={0.47}
         azimuth={0.25}
       />
-      {devices.map((dvc) => {
-        if (dvc.show) {
-          return (
-            <Cctv
-              cam={dvc}
-              isDeveloping={isDeveloping}
-              key={dvc.uniqueId}
-              onUpdatePosition={onUpdatePosition}
-            />
-          );
-        }
-      })}
-      <primitive object={interior.scene} scale={10} position={[790, 0, 100]} />
+
+      {devices
+        .filter((dvc) => dvc.show)
+        .map((dvc) => (
+          <Cctv
+            cam={dvc}
+            isDeveloping={isDeveloping}
+            showStream={showStream}
+            setShowStream={setShowStream}
+            setStreamValue={setStreamValue}
+            key={dvc.uniqueId}
+            onUpdatePosition={onUpdatePosition}
+          />
+        ))}
+      <primitive
+        object={interior.scene}
+        scale={10}
+        position={[790, 0, 100]}
+        ref={InteriorRef}
+      />
     </>
   );
 }

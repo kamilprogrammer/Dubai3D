@@ -3,9 +3,16 @@ import { PointerLockControls } from "@react-three/drei";
 import { useRef, useEffect } from "react";
 import * as THREE from "three";
 
-export default function Camera({ interior }: { interior: boolean }) {
+export default function Camera({
+  interior,
+  cameraRef,
+  heatMap,
+}: {
+  interior: boolean;
+  cameraRef: React.RefObject<any>;
+  heatMap: boolean;
+}) {
   const { camera } = useThree();
-
   const direction = new THREE.Vector3();
   const keys = useRef<{ [key: string]: boolean }>({});
   let speed: number = interior ? 1 : 1.5;
@@ -52,7 +59,7 @@ export default function Camera({ interior }: { interior: boolean }) {
       if (camera.position.y < 10) {
         camera.position.y = 10;
       }
-      if (camera.position.y > 150) {
+      if (camera.position.y > 150 && !heatMap) {
         camera.position.y = 150;
       }
     } else {
@@ -78,5 +85,5 @@ export default function Camera({ interior }: { interior: boolean }) {
     camera.position.add(moveDir);
   });
 
-  return <PointerLockControls /*makeDefault*/ />;
+  return <PointerLockControls ref={cameraRef} /*makeDefault*/ />;
 }
