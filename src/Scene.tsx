@@ -11,6 +11,7 @@ import Camera from "./Camera";
 import DroneFollower from "./Drone";
 import InteriorModel from "./Interior";
 import { useControls } from "leva";
+import { Switch } from "./components/ui/switch";
 
 export default function Scene({
   dubai,
@@ -19,6 +20,8 @@ export default function Scene({
   setShowStream,
   setStreamValue,
   showInterior,
+  heatMap,
+  setHeatMap,
   setShowInterior,
   isTransitioning,
   setIsTransitioning,
@@ -26,6 +29,8 @@ export default function Scene({
   dubai: any;
   drone: any;
   showStream: boolean;
+  heatMap: boolean;
+  setHeatMap: React.Dispatch<React.SetStateAction<boolean>>;
   setShowStream: React.Dispatch<React.SetStateAction<boolean>>;
   setStreamValue: React.Dispatch<React.SetStateAction<string>>;
   showInterior: boolean;
@@ -39,7 +44,6 @@ export default function Scene({
   const lookingRef = useRef(false);
   const cameraRef = useRef<any>(null);
   const [isLookingAtButton, setIsLookingAtButton] = useState(false);
-  const [heatMap, setHeatMap] = useState(false);
 
   const { camera } = useThree();
 
@@ -94,14 +98,17 @@ export default function Scene({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  if (showInterior) {
-    const controls = useControls("HeatMap - TopView", {
+  const controls = useControls(
+    "HeatMap - TopView",
+    () => ({
       HeatMap: {
         value: heatMap,
         onChange: (value) => setHeatMap(value),
+        render: () => showInterior,
       },
-    });
-  }
+    }),
+    [showInterior]
+  );
 
   return (
     <>
@@ -152,16 +159,7 @@ export default function Scene({
             font="/cairo.ttf"
             lineHeight={1.2}
           >
-            {"Test #1"}
-          </Text>
-          <Text
-            position={[100, 46, -550]}
-            fontSize={20}
-            color="gray"
-            font="/cairo.ttf"
-            lineHeight={1.2}
-          >
-            {"By Kamel Rifai && Ammar Rifai :)"}
+            {"Test #6"}
           </Text>
 
           {/* Sky only for exterior */}
@@ -169,8 +167,8 @@ export default function Scene({
             distance={450000}
             sunPosition={[100, 40, 100]}
             turbidity={2}
-            rayleigh={0.4}
-            mieCoefficient={0.001}
+            rayleigh={0.5}
+            mieCoefficient={0.005}
             mieDirectionalG={0.7}
             inclination={0.47}
             azimuth={0.25}

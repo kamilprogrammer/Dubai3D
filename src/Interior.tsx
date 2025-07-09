@@ -1,10 +1,11 @@
-import { Sky, useGLTF } from "@react-three/drei";
+import { Html, Sky, useGLTF } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import type { CameraType } from "./CameraType";
 import { useEffect, useRef, useState } from "react";
 import Cctv from "./Cctv";
 import { supabase } from "./supabase";
 import * as THREE from "three";
+import { temps } from "./HeatMap";
 
 export default function InteriorModel({
   showStream,
@@ -27,7 +28,7 @@ export default function InteriorModel({
 
   useEffect(() => {
     if (heatMap && InteriorRef.current) {
-      const targetPosition = new THREE.Vector3(780, 240, 100);
+      const targetPosition = new THREE.Vector3(790, 240, 100);
       let t = 0.02;
       const from = camera.position.clone();
       const to = targetPosition.clone();
@@ -35,7 +36,7 @@ export default function InteriorModel({
       //const tmp = new THREE.Object3D();
 
       const animate = () => {
-        t += 0.01;
+        t += 0.05;
 
         // Interpolate position
 
@@ -52,13 +53,21 @@ export default function InteriorModel({
 
         camera.lookAt(InteriorRef.current!.position);
 
+        camera.rotation.set(
+          -1.570796326794897,
+          4.163336342344337e-17,
+          3.13599999999999518
+        );
+
         if (t < 1) requestAnimationFrame(animate);
       };
 
       animate();
+      //controlsRef.current.enabled = false;
     }
   }, [heatMap]);
 
+  // Fetch Devices..
   useEffect(() => {
     const fetchDevices = async () => {
       const { data, error } = await supabase
@@ -223,9 +232,30 @@ export default function InteriorModel({
         });
       }
       if (e.key === "o") {
-        camera.position.set(0, 10, 10);
-        camera.rotation.set(0, 0, 0);
-        setShowInterior(false);
+        function triggerEnterBuilding() {
+          const targetPosition = new THREE.Vector3(0, 10, 10);
+          let t = 0;
+          const from = camera.position.clone();
+          const to = targetPosition.clone();
+
+          const animate = () => {
+            t += 0.01;
+            camera.position.lerpVectors(from, to, t);
+            const targetEuler = new THREE.Euler(0, 0, 0); // yaw: 90 degrees
+            const targetQuaternion = new THREE.Quaternion().setFromEuler(
+              targetEuler
+            );
+
+            camera.quaternion.slerp(targetQuaternion, 0.1); // 0.1 is interpolation speed
+            if (t < 1) requestAnimationFrame(animate);
+            else {
+              setShowInterior(false); // Midway: switch content
+            }
+          };
+
+          animate();
+        }
+        triggerEnterBuilding();
       }
       if (e.key === "p") {
         setIsDeveloping(!isDeveloping);
@@ -250,6 +280,22 @@ export default function InteriorModel({
         azimuth={0.25}
       />
 
+      {heatMap &&
+        temps.map((temp) => {
+          console.log(temp);
+          return (
+            <Html
+              position={[temp.x, 10, temp.z]}
+              //rotation={[0, Math.PI / 2, Math.PI]}
+              key={temp.id}
+              children={
+                <span className="font-cairo text-lg whitespace-nowrap">
+                  {temp.value}
+                </span>
+              }
+            />
+          );
+        })}
       {devices
         .filter((dvc) => dvc.show)
         .map((dvc) => (
