@@ -33,22 +33,22 @@ export default function Camera({
   useFrame(() => {
     direction.set(0, 0, 0);
 
-    if (keys.current["w"]) {
+    if (keys.current["w"] && !heatMap) {
       direction.z -= 1;
     }
-    if (keys.current["s"]) {
+    if (keys.current["s"] && !heatMap) {
       direction.z += 1;
     }
-    if (keys.current["a"]) {
+    if (keys.current["a"] && !heatMap) {
       direction.x -= 1;
     }
-    if (keys.current["d"]) {
+    if (keys.current["d"] && !heatMap) {
       direction.x += 1;
     }
-    if (keys.current[" "]) {
+    if (keys.current[" "] && !heatMap) {
       direction.y += 1;
     }
-    if (keys.current["shift"]) {
+    if (keys.current["shift"] && !heatMap) {
       if (camera.position.y > 10) {
         direction.y -= 1;
       }
@@ -85,5 +85,7 @@ export default function Camera({
     camera.position.add(moveDir);
   });
 
-  return <PointerLockControls ref={cameraRef} /*makeDefault*/ />;
+  return (
+    <PointerLockControls ref={cameraRef} /*makeDefault*/ enabled={!heatMap} />
+  );
 }

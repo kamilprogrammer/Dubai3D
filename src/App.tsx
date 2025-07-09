@@ -1,11 +1,12 @@
 import "./App.css";
 import { Canvas } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Scene from "./Scene";
 import { motion } from "framer-motion";
 import { Button } from "./components/ui/button";
 import { Leva } from "leva";
+import { HeatLayer } from "./HeatMap";
 
 function App() {
   const dubai = useGLTF("/dubai.glb");
@@ -14,6 +15,7 @@ function App() {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showStream, setShowStream] = useState(false);
   const [streamValue, setStreamValue] = useState("in");
+  const [heatMap, setHeatMap] = useState(false);
 
   return (
     <>
@@ -75,11 +77,13 @@ function App() {
         +
       </div>
 
-      <div className="h-screen w-screen top-0 left-0 fixed">
+      <div className="fixed h-screen w-screen top-0 left-0">
         <Canvas camera={{ position: [0, 75, 75] }}>
           <Scene
             dubai={dubai}
             drone={drone}
+            heatMap={heatMap}
+            setHeatMap={setHeatMap}
             showInterior={showInterior}
             setShowInterior={setShowInterior}
             isTransitioning={isTransitioning}
@@ -89,6 +93,9 @@ function App() {
             setStreamValue={setStreamValue}
           />
         </Canvas>
+        <div className="absolute top-0 left-0 w-screen h-screen pointer-events-none z-10">
+          {heatMap && <HeatLayer />}
+        </div>
       </div>
     </>
   );
