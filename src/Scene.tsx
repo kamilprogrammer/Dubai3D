@@ -11,7 +11,6 @@ import Camera from "./Camera";
 import DroneFollower from "./Drone";
 import InteriorModel from "./Interior";
 import { useControls } from "leva";
-import { Switch } from "./components/ui/switch";
 
 export default function Scene({
   dubai,
