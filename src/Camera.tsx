@@ -15,7 +15,7 @@ export default function Camera({
   const { camera } = useThree();
   const direction = new THREE.Vector3();
   const keys = useRef<{ [key: string]: boolean }>({});
-  let speed: number = interior ? 1 : 1.5;
+  let speed: number = interior ? 1.5 : 1.5;
 
   useEffect(() => {
     const down = (e: KeyboardEvent) =>
