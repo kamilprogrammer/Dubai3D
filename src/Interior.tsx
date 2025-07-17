@@ -6,16 +6,21 @@ import Cctv from "./Cctv";
 import { supabase } from "./supabase";
 import * as THREE from "three";
 import { temps } from "./HeatMap";
+import AC from "./AC";
+import type { AcType } from "./AcType";
+import { useControls, folder } from "leva";
 
 export default function InteriorModel({
   showStream,
   heatMap,
+  setHeatMap,
   setShowStream,
   setStreamValue,
   setShowInterior,
 }: {
   showStream: boolean;
   heatMap: boolean;
+  setHeatMap: React.Dispatch<React.SetStateAction<boolean>>;
   setShowStream: React.Dispatch<React.SetStateAction<boolean>>;
   setStreamValue: React.Dispatch<React.SetStateAction<string>>;
   setShowInterior: React.Dispatch<React.SetStateAction<boolean>>;
@@ -25,7 +30,58 @@ export default function InteriorModel({
   const [isDeveloping, setIsDeveloping] = useState(false);
   const [devices, setDevices] = useState<CameraType[]>([]);
   const InteriorRef = useRef<THREE.Object3D | null>(null);
+  console.log(interior.scene);
 
+  // Debug Controls
+  const { ShowAC } = useControls({
+    AC: folder({
+      ShowAC: true,
+    }),
+  });
+
+  // removing the FCUs
+  useEffect(() => {
+    if (!ShowAC) {
+      if (InteriorRef.current) {
+        console.log("removing FCUs");
+        const fcu = InteriorRef.current.getObjectByName("FCU");
+        fcu!.visible = false;
+        for (let i = 1; i < 13; i++) {
+          if (i < 10) {
+            const fcu = InteriorRef.current.getObjectByName("FCU00" + i);
+            if (fcu) {
+              fcu!.visible = false;
+            }
+          } else {
+            const fcu = InteriorRef.current.getObjectByName("FCU0" + i);
+            if (fcu) {
+              fcu!.visible = false;
+            }
+          }
+        }
+      }
+    }
+    if (ShowAC) {
+      if (InteriorRef.current) {
+        console.log("showing FCUs");
+        const fcu = InteriorRef.current.getObjectByName("FCU");
+        fcu!.visible = true;
+        for (let i = 1; i < 13; i++) {
+          if (i < 10) {
+            const fcu = InteriorRef.current.getObjectByName("FCU00" + i);
+            if (fcu) {
+              fcu!.visible = true;
+            }
+          } else {
+            const fcu = InteriorRef.current.getObjectByName("FCU0" + i);
+            if (fcu) {
+              fcu!.visible = true;
+            }
+          }
+        }
+      }
+    }
+  }, [interior, InteriorRef, ShowAC]);
   useEffect(() => {
     if (heatMap && InteriorRef.current) {
       const targetPosition = new THREE.Vector3(790, 240, 100);
@@ -36,7 +92,7 @@ export default function InteriorModel({
       //const tmp = new THREE.Object3D();
 
       const animate = () => {
-        t += 0.05;
+        t += 0.06;
 
         // Interpolate position
 
@@ -164,7 +220,7 @@ export default function InteriorModel({
           setDevices((prev) => [...prev, newCam]);
         }
       }
-      if (e.key === "Delete") {
+      if (e.key === "Delete" && !heatMap) {
         if (devices[devices.length - 1].id) {
           const { data, error } = await supabase
             .from("DubaiDevices")
@@ -176,7 +232,7 @@ export default function InteriorModel({
         }
         setDevices((prev) => prev.slice(0, prev.length - 1));
       }
-      if (e.key === "Home" || e.key === "h") {
+      if ((e.key === "Home" || e.key === "h") && !heatMap) {
         console.log(devices[devices.length - 1]);
         devices.forEach(async (dvc) => {
           if (dvc.id) {
@@ -231,7 +287,9 @@ export default function InteriorModel({
           }
         });
       }
-      if (e.key === "o") {
+      if (e.key === "o" && !heatMap) {
+        console.log(heatMap);
+        //setHeatMap(false);
         function triggerEnterBuilding() {
           const targetPosition = new THREE.Vector3(0, 10, 10);
           let t = 0;
@@ -246,7 +304,7 @@ export default function InteriorModel({
               targetEuler
             );
 
-            camera.quaternion.slerp(targetQuaternion, 0.1); // 0.1 is interpolation speed
+            camera.quaternion.slerp(targetQuaternion, 0.1);
             if (t < 1) requestAnimationFrame(animate);
             else {
               setShowInterior(false); // Midway: switch content
@@ -257,18 +315,309 @@ export default function InteriorModel({
         }
         triggerEnterBuilding();
       }
-      if (e.key === "p") {
+      if (e.key === "p" && !heatMap) {
         setIsDeveloping(!isDeveloping);
+      }
+      if (e.key === "0" && !heatMap) {
+        console.log(camera.position);
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [devices, isDeveloping]);
+  }, [devices, isDeveloping, heatMap]);
+  const [mockACs, setMockACs] = useState<AcType[]>([
+    {
+      id: 1,
+      uniqueId: "mockAC #1",
+      title: "Machine Sense #1",
+      ip: "192.168.159.200",
+      mac: "00:1A:2B:3C:4D:5E",
+      model: "IOT AC #1",
+      vendor: "Machine Sense",
+      notes: "Mock AC",
+      position: {
+        x: 980.2782602371987,
+        y: 24.482972428416,
+        z: 159.55603480332238,
+      },
+      rotation: {
+        x: 0,
+        y: 0,
+        z: 0,
+      },
+      mode: "ACTIVE",
+      show: true,
+    },
+    {
+      id: 2,
+      uniqueId: "mockAC #2",
+      title: "Machine Sense #2",
+      ip: "192.168.159.201",
+      mac: "00:1A:2B:3C:4D:5E",
+      model: "IOT AC #2",
+      vendor: "Machine Sense",
+      notes: "Mock AC",
+      position: {
+        x: 889.5978900679819,
+        y: 24.455844122715675,
+        z: 234.15089663198444,
+      },
+      rotation: {
+        x: 0,
+        y: 0,
+        z: 0,
+      },
+      mode: "ACTIVE",
+      show: true,
+    },
+    {
+      id: 3,
+      uniqueId: "mockAC #3",
+      title: "Machine Sense #3",
+      ip: "192.168.159.202",
+      mac: "00:1A:2B:3C:4D:5E",
+      model: "IOT AC #3",
+      vendor: "Machine Sense",
+      notes: "Mock AC",
+      position: {
+        x: 784.2617927370359,
+        y: 24.455844122715675,
+        z: 236.97698633631833,
+      },
+      rotation: {
+        x: 0,
+        y: 0,
+        z: 0,
+      },
+      mode: "ACTIVE",
+      show: true,
+    },
+    {
+      id: 4,
+      uniqueId: "mockAC #4",
+      title: "Machine Sense #4",
+      ip: "192.168.159.203",
+      mac: "00:1A:2B:3C:4D:5E",
+      model: "IOT AC #4",
+      vendor: "Machine Sense",
+      notes: "Mock AC",
+      position: {
+        x: 752.1966208347592,
+        y: 24.455844122715675,
+        z: 236.75972767346076,
+      },
+      rotation: {
+        x: 0,
+        y: 0,
+        z: 0,
+      },
+      mode: "ACTIVE",
+      show: true,
+    },
+    {
+      id: 5,
+      uniqueId: "mockAC #5",
+      title: "Machine Sense #5",
+      ip: "192.168.159.204",
+      mac: "00:1A:2B:3C:4D:5E",
+      model: "IOT AC #5",
+      vendor: "Machine Sense",
+      notes: "Mock AC",
+      position: {
+        x: 685.5230408328782,
+        y: 24.455844122715675,
+        z: 219.59089723073265,
+      },
+      rotation: {
+        x: 0,
+        y: 0,
+        z: 0,
+      },
+      mode: "ACTIVE",
+      show: true,
+    },
+    {
+      id: 6,
+      uniqueId: "mockAC #6",
+      title: "Machine Sense #6",
+      ip: "192.168.159.205",
+      mac: "00:1A:2B:3C:4D:5E",
+      model: "IOT AC #6",
+      vendor: "Machine Sense",
+      notes: "Mock AC",
+      position: {
+        x: 619.6305099584712,
+        y: 24.455844122715675,
+        z: 191.99442585683687,
+      },
+      rotation: {
+        x: 0,
+        y: Math.PI / 5,
+        z: 0,
+      },
+      mode: "ACTIVE",
+      show: true,
+    },
+    {
+      id: 7,
+      uniqueId: "mockAC #7",
+      title: "Machine Sense #7",
+      ip: "192.168.159.206",
+      mac: "00:1A:2B:3C:4D:5E",
+      model: "IOT AC #7",
+      vendor: "Machine Sense",
+      notes: "Mock AC",
+      position: {
+        x: 640.287466136744,
+        y: 24.455844122715675,
+        z: 127.80189738168656,
+      },
+      rotation: {
+        x: 0,
+        y: 0,
+        z: 0,
+      },
+      mode: "ACTIVE",
+      show: true,
+    },
+    {
+      id: 8,
+      uniqueId: "mockAC #8",
+      title: "Machine Sense #8",
+      ip: "192.168.159.207",
+      mac: "00:1A:2B:3C:4D:5E",
+      model: "IOT AC #8",
+      vendor: "Machine Sense",
+      notes: "Mock AC",
+      position: {
+        x: 634.8857688088333,
+        y: 24.455844122715675,
+        z: 28.0699621969406,
+      },
+      rotation: {
+        x: 0,
+        y: 0,
+        z: 0,
+      },
+      mode: "ACTIVE",
+      show: true,
+    },
+    {
+      id: 9,
+      uniqueId: "mockAC #9",
+      title: "Machine Sense #9",
+      ip: "192.168.159.208",
+      mac: "00:1A:2B:3C:4D:5E",
+      model: "IOT AC #9",
+      vendor: "Machine Sense",
+      notes: "Mock AC",
+      position: {
+        x: 742.7063112048392,
+        y: 24.455844122715675,
+        z: -29.93116166102085,
+      },
+      rotation: {
+        x: 0,
+        y: 0,
+        z: 0,
+      },
+      mode: "ACTIVE",
+      show: true,
+    },
+    {
+      id: 10,
+      uniqueId: "mockAC #10",
+      title: "Machine Sense #10",
+      ip: "192.168.159.209",
+      mac: "00:1A:2B:3C:4D:5E",
+      model: "IOT AC #10",
+      vendor: "Machine Sense",
+      notes: "Mock AC",
+      position: {
+        x: 741.4418491409406,
+        y: 24.455844122715675,
+        z: 32.66666774988795,
+      },
+      rotation: {
+        x: 0,
+        y: 0,
+        z: 0,
+      },
+      mode: "ACTIVE",
+      show: true,
+    },
+    {
+      id: 11,
+      uniqueId: "mockAC #11",
+      title: "Machine Sense #11",
+      ip: "192.168.159.210",
+      mac: "00:1A:2B:3C:4D:5E",
+      model: "IOT AC #11",
+      vendor: "Machine Sense",
+      notes: "Mock AC",
+      position: {
+        x: 756.6697122010439,
+        y: 24.455844122715675,
+        z: 131.32894867933527,
+      },
+      rotation: {
+        x: 0,
+        y: 0,
+        z: 0,
+      },
+      mode: "ACTIVE",
+      show: true,
+    },
+    {
+      id: 12,
+      uniqueId: "mockAC #12",
+      title: "Machine Sense #12",
+      ip: "192.168.159.211",
+      mac: "00:1A:2B:3C:4D:5E",
+      model: "IOT AC #12",
+      vendor: "Machine Sense",
+      notes: "Mock AC",
+      position: {
+        x: 851.3070560657316,
+        y: 24.455844122715675,
+        z: 127.67873842602951,
+      },
+      rotation: {
+        x: 0,
+        y: 0,
+        z: 0,
+      },
+      mode: "ACTIVE",
+      show: true,
+    },
+    {
+      id: 13,
+      uniqueId: "mockAC #13",
+      title: "Machine Sense #13",
+      ip: "192.168.159.212",
+      mac: "00:1A:2B:3C:4D:5E",
+      model: "IOT AC #1",
+      vendor: "Machine Sense",
+      notes: "Mock AC",
+      position: {
+        x: 903.0095858500986,
+        y: 24.455844122715675,
+        z: -8.574628722676271,
+      },
+      rotation: {
+        x: 0,
+        y: 0,
+        z: 0,
+      },
+      mode: "ACTIVE",
+      show: true,
+    },
+  ]);
   return (
     <>
       <ambientLight intensity={2} />
-      <pointLight position={[10, 10, 10]} intensity={10} />
+      <pointLight position={[900, 50, 130]} intensity={10} color={"white"} />
       <Sky
         distance={450000}
         sunPosition={[100, 40, 100]}
@@ -308,6 +657,10 @@ export default function InteriorModel({
             key={dvc.uniqueId}
             onUpdatePosition={onUpdatePosition}
           />
+        ))}
+      {ShowAC &&
+        mockACs.map((ac) => (
+          <AC ac={ac} isDeveloping={false} key={ac.uniqueId + ac.id} />
         ))}
       <primitive
         object={interior.scene}

@@ -43,6 +43,7 @@ export default function Scene({
   const buttonRef = useRef<THREE.Mesh | null>(null);
   const lookingRef = useRef(false);
   const cameraRef = useRef<any>(null);
+  const DroneRef = useRef<THREE.Object3D | null>(null);
   const [isLookingAtButton, setIsLookingAtButton] = useState(false);
 
   const { camera } = useThree();
@@ -105,6 +106,20 @@ export default function Scene({
         value: heatMap,
         onChange: (value) => setHeatMap(value),
         render: () => showInterior,
+      },
+    }),
+    [showInterior]
+  );
+
+  const { ShowDrone }: any = useControls(
+    "Drone",
+    () => ({
+      ShowDrone: {
+        value: false,
+        onChange: (value) => {
+          console.log(value);
+        },
+        render: () => !showInterior,
       },
     }),
     [showInterior]
@@ -178,7 +193,7 @@ export default function Scene({
       {/* Drone */}
       <Camera interior={showInterior} cameraRef={cameraRef} heatMap={heatMap} />
 
-      {/*{!showInterior && (
+      {ShowDrone && !showInterior && (
         <Float
           speed={1}
           floatIntensity={0.1}
@@ -199,6 +214,7 @@ export default function Scene({
           <InteriorModel
             showStream={showStream}
             heatMap={heatMap}
+            setHeatMap={setHeatMap}
             setShowStream={setShowStream}
             setStreamValue={setStreamValue}
             setShowInterior={setShowInterior}
