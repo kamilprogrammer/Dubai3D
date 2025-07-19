@@ -10,7 +10,7 @@ import { Float } from "@react-three/drei";
 import Camera from "./Camera";
 import DroneFollower from "./Drone";
 import InteriorModel from "./Interior";
-import { useControls } from "leva";
+import { folder, useControls } from "leva";
 
 export default function Scene({
   dubai,
@@ -111,16 +111,14 @@ export default function Scene({
   );
 
   const { ShowDrone }: any = useControls(
-    "Drone",
-    () => ({
-      ShowDrone: {
-        value: false,
-        onChange: (value) => {
-          console.log(value);
+    {
+      Drone: folder({
+        ShowDrone: {
+          value: false,
+          render: () => !showInterior,
         },
-        render: () => !showInterior,
-      },
-    }),
+      }),
+    },
     [showInterior]
   );
 

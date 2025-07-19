@@ -1,11 +1,8 @@
 import { Html } from "@react-three/drei";
 import { useMemo, useRef, useState } from "react";
-import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { motion } from "framer-motion";
-import Badge from "./Badge";
 import { Switch } from "@/components/ui/switch";
-import { folder, useControls } from "leva";
 import type { AcType } from "./AcType";
 
 type Props = {
@@ -15,7 +12,6 @@ type Props = {
 
 export default function AC({ ac, isDeveloping }: Props) {
   const objRef = useRef<THREE.Group>(null);
-  const { scene } = useGLTF("/AC.glb");
   const [hovered, setHovered] = useState(false);
   const [active, setActive] = useState(ac.mode === "ACTIVE" ? true : false);
   const [Loading, setLoading] = useState(false);
